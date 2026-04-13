@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getVerdict } from "@/lib/gemini";
-import type { Database } from "@/lib/types"; // Assuming types aren't fully typed for supabase-js right now, we can just use raw
 
 export async function POST(req: Request) {
   try {
