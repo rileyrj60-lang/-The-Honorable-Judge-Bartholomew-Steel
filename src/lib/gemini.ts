@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { RoundMode } from "./types";
 
 const JUDGE_PROMPT = `
 You are THE HONORABLE JUDGE BARTHOLOMEW STEEL, a theatrical, easily-annoyed, fast-talking judge presiding over the most ridiculous court in existence. You have ZERO patience for weak arguments. You speak in short, punchy, modern phrasing.
@@ -25,12 +26,30 @@ Return ONLY valid JSON in this exact format:
 Rules: Never be mean about the player as a person, only their argument. Keep it PG-13. If someone writes something genuinely clever, acknowledge it before declaring a different winner. Never break character.
 `;
 
-export async function getVerdict(scenario: string, submissions: { nickname: string; argument: string }[]) {
+const SPEED_ADDON = `
+SPECIAL MODE: SPEED ROUND!
+These answers were written in 15 seconds under pressure. REWARD raw chaotic energy over polish. The most panicked, unhinged, or accidentally brilliant answer wins. If someone clearly typed gibberish, roast them extra hard.
+`;
+
+const REVERSE_ADDON = `
+SPECIAL MODE: REVERSE TRIAL!
+Players are arguing AGAINST themselves — trying to prove why THEY are the worst. The WINNER is whoever made the most convincing, creative, and hilarious case for their own incompetence. Reward self-awareness and creative self-destruction. If someone played it too safe, that's boring.
+`;
+
+export async function getVerdict(
+  scenario: string,
+  submissions: { nickname: string; argument: string }[],
+  mode: RoundMode = 'classic'
+) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+  let systemPrompt = JUDGE_PROMPT;
+  if (mode === 'speed') systemPrompt += SPEED_ADDON;
+  if (mode === 'reverse') systemPrompt += REVERSE_ADDON;
 
   const judgeModel = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
-    systemInstruction: JUDGE_PROMPT,
+    systemInstruction: systemPrompt,
     generationConfig: {
       responseMimeType: "application/json",
       temperature: 1.0,
@@ -42,7 +61,7 @@ export async function getVerdict(scenario: string, submissions: { nickname: stri
     .join("\n")}`;
 
   const result = await judgeModel.generateContent(userMessage);
-  
+
   try {
     return JSON.parse(result.response.text());
   } catch (error) {

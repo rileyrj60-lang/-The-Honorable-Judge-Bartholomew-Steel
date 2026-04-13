@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
+    --background: #1a1207;
+    --foreground: #f5f0e8;
   }
 }
 
@@ -18,19 +18,141 @@ body {
   overflow-x: hidden;
 }
 
-/* Jackbox aesthetics */
-.jackbox-title {
-  @apply text-5xl md:text-7xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-600 drop-shadow-lg;
+/* ═══════════════════════════════════════ */
+/* Screen Shake Animation                 */
+/* ═══════════════════════════════════════ */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-8px, -6px) rotate(-1deg); }
+  20% { transform: translate(8px, 4px) rotate(1deg); }
+  30% { transform: translate(-6px, 8px) rotate(0deg); }
+  40% { transform: translate(6px, -4px) rotate(1deg); }
+  50% { transform: translate(-4px, 6px) rotate(-1deg); }
+  60% { transform: translate(4px, -8px) rotate(0deg); }
+  70% { transform: translate(-8px, 4px) rotate(-1deg); }
+  80% { transform: translate(8px, -6px) rotate(1deg); }
+  90% { transform: translate(-4px, -4px) rotate(0deg); }
 }
 
-.jackbox-card {
-  @apply bg-slate-800 rounded-2xl border-4 border-slate-700 shadow-[8px_8px_0_rgba(0,0,0,0.5)] p-6 md:p-8;
+.shake {
+  animation: screen-shake 0.6s ease-in-out;
 }
 
-.jackbox-input {
-  @apply w-full bg-slate-900 border-4 border-slate-600 rounded-xl p-4 text-xl md:text-2xl outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-400/20 transition-all font-bold text-white placeholder-slate-500;
+/* ═══════════════════════════════════════ */
+/* Glow Pulse                             */
+/* ═══════════════════════════════════════ */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(200, 170, 100, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(200, 170, 100, 0.6), 0 0 80px rgba(200, 170, 100, 0.2); }
 }
 
-.jackbox-button {
-  @apply w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-900 font-black uppercase tracking-widest text-xl rounded-xl py-4 px-8 hover:from-yellow-300 hover:to-orange-400 transform hover:-translate-y-1 active:translate-y-1 transition-all shadow-[0_8px_0_rgb(194,65,12)] hover:shadow-[0_4px_0_rgb(194,65,12)] active:shadow-none;
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════ */
+/* Timer Urgency                          */
+/* ═══════════════════════════════════════ */
+@keyframes urgency-flash {
+  0%, 100% { background-color: rgba(220, 38, 38, 0.1); }
+  50% { background-color: rgba(220, 38, 38, 0.25); }
+}
+
+.urgency-flash {
+  animation: urgency-flash 0.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════ */
+/* Round Mode Badge                        */
+/* ═══════════════════════════════════════ */
+@keyframes badge-entrance {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+}
+
+.badge-entrance {
+  animation: badge-entrance 0.5s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════ */
+/* Typewriter Cursor                       */
+/* ═══════════════════════════════════════ */
+@keyframes blink-cursor {
+  0%, 50% { border-right-color: currentColor; }
+  51%, 100% { border-right-color: transparent; }
+}
+
+.typewriter-cursor {
+  border-right: 3px solid currentColor;
+  animation: blink-cursor 0.8s step-end infinite;
+  padding-right: 4px;
+}
+
+/* ═══════════════════════════════════════ */
+/* Winner Spotlight                        */
+/* ═══════════════════════════════════════ */
+@keyframes spotlight {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.spotlight-in {
+  animation: spotlight 0.8s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════ */
+/* Voting bar fill                         */
+/* ═══════════════════════════════════════ */
+@keyframes bar-fill {
+  from { width: 0%; }
+}
+
+.bar-fill {
+  animation: bar-fill 0.8s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════ */
+/* Speed Round Danger Effect               */
+/* ═══════════════════════════════════════ */
+@keyframes speed-border {
+  0%, 100% { border-color: rgb(220, 38, 38); }
+  50% { border-color: rgb(251, 191, 36); }
+}
+
+.speed-border {
+  animation: speed-border 0.4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════ */
+/* Difficulty Star Shimmer                 */
+/* ═══════════════════════════════════════ */
+@keyframes shimmer {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════ */
+/* Scrollbar                               */
+/* ═══════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(161, 140, 100, 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 140, 100, 0.6);
 }
