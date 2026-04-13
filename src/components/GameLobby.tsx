@@ -60,11 +60,11 @@ export default function GameLobby({ room, players, isHost, onStartGame }: GameLo
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           onClick={onStartGame}
-          disabled={players.length < 2}
+          disabled={players.length < 1}
           className="jackbox-button flex items-center gap-3 w-auto max-w-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Play size={24} /> 
-          {players.length < 2 ? "Waiting for players..." : "Start Game"}
+          {players.length < 1 ? "Waiting for players..." : "Start Game"}
         </motion.button>
       ) : (
         <p className="text-slate-400 text-xl font-medium animate-pulse mt-8">
