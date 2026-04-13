@@ -78,14 +78,25 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
   }, [phase, currentRoastIndex, roasts.length]);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-12">
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-12 relative z-10 w-full min-h-screen pt-12">
+      {/* Background Courtroom Image */}
+      {phase !== 'loading' && (
+        <div 
+          className="fixed inset-0 z-[-1] bg-cover bg-center" 
+          style={{ backgroundImage: "url('/courtroom.png')" }}
+        >
+          <div className="absolute inset-0 bg-slate-900/40 mix-blend-multiply" />
+        </div>
+      )}
+
       {/* Arguments Presentation Phase */}
       {phase === 'arguments' && submissions[currentArgIndex] && (
         <motion.div 
           key={currentArgIndex}
-          initial={{ opacity: 0, scale: 0.8, y: 50 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, x: -100 }}
+          initial={{ opacity: 0, scale: 0.1, y: 150, rotate: -15 }}
+          animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+          exit={{ opacity: 0, scale: 0.5, x: -300 }}
+          transition={{ type: "spring", stiffness: 200, damping: 10 }}
           className="flex flex-col items-center w-full max-w-3xl justify-center min-h-[50vh]"
         >
           <div className="w-full relative">
@@ -110,10 +121,15 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
 
       {/* Judgment Phase */}
       {phase !== 'arguments' && phase !== 'loading' && (
-        <>
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           className="w-full flex w-full flex-col items-center"
+        >
           <motion.div 
-            initial={{ y: -50, scale: 0.8 }}
-            animate={{ y: 0, scale: 1 }}
+            initial={{ y: -100, scale: 0.5, rotate: -20 }}
+            animate={{ y: 0, scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 150, damping: 12, delay: 0.2 }}
             className="flex items-center gap-4 text-yellow-400"
           >
             <Gavel size={60} className="rotate-12" />
@@ -174,15 +190,16 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
           {/* Next Round Button */}
           {isHost && phase === 'roasts' && currentRoastIndex >= roasts.length && (
             <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.5 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
               onClick={onNextRound}
               className="jackbox-button flex items-center justify-center gap-3 mt-12 w-full max-w-sm"
             >
               {verdict.round >= 5 ? "Final Leaderboard" : "Next Round"} <ArrowRight />
             </motion.button>
           )}
-        </>
+        </motion.div>
       )}
     </div>
   );

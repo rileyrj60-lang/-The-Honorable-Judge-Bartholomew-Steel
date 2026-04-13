@@ -11,7 +11,7 @@ import ActiveGame from "@/components/ActiveGame";
 import VerdictScreen from "@/components/VerdictScreen";
 import Leaderboard from "@/components/Leaderboard";
 
-const ROUND_TIME = 30;
+const ROUND_TIME = 60;
 const MAX_ROUNDS = 5;
 
 export default function RoomPage({ params }: { params: Promise<{ code: string }> }) {
