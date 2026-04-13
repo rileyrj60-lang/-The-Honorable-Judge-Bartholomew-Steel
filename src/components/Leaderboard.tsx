@@ -27,16 +27,16 @@ export default function Leaderboard({ players, isHost = true, onPlayAgain }: Lea
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className="w-full text-center bg-amber-50/95 border border-stone-400 p-12 shadow-2xl relative"
+        initial={{ opacity: 0, y: -50, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 150, damping: 10 }}
+        className="w-full text-center bg-amber-50/95 border border-stone-400 p-12 shadow-2xl rounded-2xl relative"
       >
         <div className="absolute top-0 left-0 right-0 h-4 bg-[url('/exterior.png')] opacity-10" />
         <h1 className="text-5xl md:text-7xl font-bold text-stone-900 uppercase tracking-widest mb-4 border-b-4 border-double border-stone-800 pb-6 inline-block">
           Final Judgment
         </h1>
-        <p className="text-2xl text-stone-600 font-bold italic mt-4">The Court recognizes the following counsel:</p>
+        <p className="text-2xl text-stone-600 font-bold italic mt-4">Final Scores:</p>
       </motion.div>
 
       <div className="w-full space-y-6">
@@ -44,10 +44,10 @@ export default function Leaderboard({ players, isHost = true, onPlayAgain }: Lea
           {sortedPlayers.map((player, index) => (
             <motion.div 
               key={player.id}
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.2, ease: "easeOut" }}
-              className={`flex items-center justify-between p-8 shadow-xl border border-stone-400 relative overflow-hidden ${
+              initial={{ opacity: 0, x: -100, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 120, damping: 12, delay: index * 0.1 }}
+              className={`flex items-center justify-between p-8 shadow-[0_10px_20px_rgba(0,0,0,0.2)] border-2 border-stone-400 rounded-xl relative overflow-hidden hover:-translate-y-1 transition-transform ${
                 index === 0 ? 'bg-amber-50/95 border-l-8 border-l-stone-800' : 'bg-stone-100/90'
               }`}
             >
@@ -65,7 +65,7 @@ export default function Leaderboard({ players, isHost = true, onPlayAgain }: Lea
               </div>
               
               <div className={`text-5xl font-bold font-serif ${index === 0 ? 'text-stone-900' : 'text-stone-600'} relative z-10`}>
-                {player.score} <span className="text-xl tracking-widest uppercase">Sustained</span>
+                {player.score} <span className="text-xl tracking-widest uppercase">PTS</span>
               </div>
             </motion.div>
           ))}
@@ -74,13 +74,13 @@ export default function Leaderboard({ players, isHost = true, onPlayAgain }: Lea
 
       {isHost && (
         <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1 }}
+          initial={{ opacity: 0, scale: 0.5, y: 50 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 150, damping: 10, delay: 0.5 }}
           onClick={onPlayAgain || (() => router.push('/'))}
-          className="text-2xl font-bold px-12 py-6 bg-stone-800 text-amber-50 border border-stone-400 shadow-xl hover:bg-stone-700 transition-all uppercase flex items-center justify-center gap-4 tracking-widest w-full max-w-sm mt-12 mb-12"
+          className="text-2xl font-bold px-12 py-6 bg-stone-800 text-amber-50 border-2 border-stone-500 rounded-xl shadow-[0_6px_0_rgba(0,0,0,0.4)] hover:-translate-y-2 hover:shadow-[0_12px_0_rgba(0,0,0,0.4)] hover:bg-stone-700 transition-all uppercase flex items-center justify-center gap-4 tracking-widest w-full max-w-sm mt-12 mb-12"
         >
-          Convene New Court
+          Play Again
         </motion.button>
       )}
     </div>
