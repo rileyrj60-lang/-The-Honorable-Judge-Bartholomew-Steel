@@ -130,6 +130,50 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verdicts' }, payload => {
         if (mounted) setVerdict(payload.new as VerdictType);
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes' }, async () => {
+        // Host checks if all votes are in whenever ANY vote is inserted
+        if (!isHost || !mounted) return;
+        const { data: rData } = await supabase.from("rooms").select("id, current_round").eq("code", code).single();
+        if (!rData) return;
+        const { data: votes } = await supabase
+          .from("votes")
+          .select("*")
+          .eq("room_id", rData.id)
+          .eq("round", rData.current_round);
+        const { data: currentPlayers } = await supabase
+          .from("players")
+          .select("id, nickname")
+          .eq("room_id", rData.id);
+        if (votes && currentPlayers && votes.length >= currentPlayers.length) {
+          // All votes in — calculate results
+          const results = currentPlayers.map(p => ({
+            player_id: p.id,
+            nickname: p.nickname,
+            votes: votes.filter((v: any) => v.voted_for_player_id === p.id).length,
+          })).sort((a, b) => b.votes - a.votes);
+          setVoteResults(results);
+          // Broadcast results to everyone
+          if (channelRef.current) {
+            channelRef.current.send({
+              type: 'broadcast',
+              event: 'vote_results',
+              payload: { results },
+            });
+          }
+          // After showing results briefly, call the judge
+          setTimeout(() => {
+            fetch('/api/judge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                room_id: rData.id,
+                round: rData.current_round,
+                vote_results: results
+              })
+            }).catch(console.error);
+          }, 4000);
+        }
+      })
       .on('broadcast', { event: 'tick' }, payload => {
         if (!isHost && mounted) {
           setTimeRemaining(payload.payload.time);
@@ -291,43 +335,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       voted_for_player_id: votedForPlayerId,
       round: room.current_round,
     });
-
-    // If host, check if all votes are in
-    if (isHost) {
-      // Small delay to let DB propagate
-      setTimeout(async () => {
-        const { data: votes } = await supabase
-          .from("votes")
-          .select("*")
-          .eq("room_id", room.id)
-          .eq("round", room.current_round);
-
-        if (votes && votes.length >= players.length) {
-          // All votes in — calculate results and call judge
-          const results = players.map(p => ({
-            player_id: p.id,
-            nickname: p.nickname,
-            votes: votes.filter((v: any) => v.voted_for_player_id === p.id).length,
-          })).sort((a, b) => b.votes - a.votes);
-
-          setVoteResults(results);
-
-          // Broadcast results to everyone
-          if (channelRef.current) {
-            channelRef.current.send({
-              type: 'broadcast',
-              event: 'vote_results',
-              payload: { results },
-            });
-          }
-
-          // After showing results for a moment, call the judge
-          setTimeout(() => {
-            callJudge();
-          }, 4000);
-        }
-      }, 500);
-    }
+    // Vote count checking is handled by the realtime subscription on vote inserts
   };
 
   // If there's only 1 player (solo testing), skip voting
