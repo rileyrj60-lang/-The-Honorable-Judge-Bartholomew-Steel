@@ -83,16 +83,24 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     }
 
     // After showing results briefly, call the judge
-    setTimeout(() => {
-      fetch('/api/judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room_id: roomId,
-          round: round,
-          vote_results: results
-        })
-      }).catch(console.error);
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/judge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room_id: roomId,
+            round: round,
+            vote_results: results
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error('Judge API failed:', res.status, err);
+        }
+      } catch (e) {
+        console.error('Judge API network error:', e);
+      }
     }, 4000);
   }, []);
 
