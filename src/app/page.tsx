@@ -100,102 +100,116 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 relative z-10 w-full overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 relative z-10 w-full overflow-hidden font-[Georgia,serif]">
       {/* Background Exterior Image */}
       <div 
         className="fixed inset-0 z-[-1] bg-cover bg-center" 
         style={{ backgroundImage: "url('/exterior.png')" }}
       >
-        <div className="absolute inset-0 bg-indigo-900/40 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-stone-900/40 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-amber-900/20 mix-blend-overlay" />
       </div>
 
       <motion.div 
-        initial={{ scale: 0.1, opacity: 0, rotate: -20, y: -200 }}
-        animate={{ scale: 1, opacity: 1, rotate: -5, y: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 12 }}
-        className="text-center space-y-4 mb-16 bg-red-600 border-8 border-slate-900 p-8 shadow-[15px_15px_0_rgba(0,0,0,1)] px-12 transform -skew-x-6"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className="text-center space-y-4 mb-16 bg-amber-50/95 border-x-4 border-y-2 border-stone-800 p-12 shadow-2xl max-w-4xl"
       >
-        <div className="flex justify-center mb-2">
-          <Gavel size={100} className="text-yellow-400 rotate-12 drop-shadow-[4px_4px_0_rgba(0,0,0,0.8)] animate-pulse" />
+        <div className="flex justify-center mb-6">
+          <Gavel size={60} className="text-stone-800" />
         </div>
-        <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter drop-shadow-[5px_5px_0_rgba(0,0,0,1)]">
-          Plead Your Case!
+        <h1 className="text-5xl md:text-7xl font-bold text-stone-900 tracking-wider uppercase border-b-4 border-stone-800 pb-4">
+          Plead Your Case
         </h1>
-        <p className="text-2xl md:text-3xl font-bold text-yellow-300 drop-shadow-[2px_2px_0_rgba(0,0,0,1)] max-w-lg mx-auto">
-          The Honorable Judge is waiting... don't make him angry.
+        <p className="text-xl md:text-2xl italic text-stone-700 max-w-lg mx-auto pt-4">
+          The Honorable Judge Bartholomew awaits your testimony. Approach the bench with dignity.
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-12 w-full max-w-5xl mt-12 relative z-20">
+      <div className="grid md:grid-cols-2 gap-12 w-full max-w-5xl mt-8 relative z-20">
+        {/* CREATE ROOM */}
         <motion.div 
-          initial={{ x: -200, opacity: 0, rotate: -15, scale: 0.5 }}
-          animate={{ x: 0, opacity: 1, rotate: -2, scale: 1 }}
-          transition={{ type: "spring", stiffness: 150, damping: 10, delay: 0.2 }}
-          className="bg-white border-8 border-slate-900 p-8 shadow-[12px_12px_0_rgba(0,0,0,0.8)] space-y-6 transform hover:scale-105 transition-transform duration-200"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="bg-amber-50/95 border border-stone-400 p-10 shadow-2xl space-y-8"
         >
-          <div className="space-y-2 bg-yellow-400 border-4 border-slate-900 p-4 -mt-12 -ml-12 w-[110%] rotate-3 shadow-[4px_4px_0_rgba(0,0,0,0.8)]">
-            <h2 className="text-4xl font-black text-slate-900 flex items-center justify-center gap-3 uppercase">
-              <Play className="text-slate-900 fill-slate-900" /> Summon the Court
+          <div className="space-y-2 pb-6 border-b-2 border-stone-300">
+            <h2 className="text-3xl font-bold text-stone-900 flex items-center justify-center gap-3">
+              <Play className="text-stone-800" /> Convene a Court
             </h2>
-            <p className="text-slate-800 text-lg font-bold text-center">Create a room and invite your friends</p>
+            <p className="text-stone-600 text-lg text-center italic">Create a docket and summon your peers</p>
           </div>
           
-          <div className="space-y-4 pt-4">
-            <input
-              type="text"
-              placeholder="YOUR NICKNAME"
-              maxLength={15}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full text-3xl font-black text-center p-4 border-4 border-slate-900 rounded-xl bg-slate-100 uppercase tracking-wider placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 transition-all shadow-inner"
-            />
+          <div className="space-y-6 pt-4">
+            <div>
+              <label className="block text-sm font-bold text-stone-600 uppercase tracking-widest mb-2">Clerk's Signature (Your Name)</label>
+              <input
+                type="text"
+                placeholder="Entry..."
+                maxLength={15}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full text-2xl text-center p-4 border-b-2 border-stone-400 bg-transparent focus:outline-none focus:border-stone-800 transition-all font-serif"
+              />
+            </div>
             <button 
               onClick={handleCreateRoom} 
               disabled={isLoading}
-              className="w-full text-3xl font-black p-6 bg-red-600 text-white rounded-2xl border-4 border-slate-900 shadow-[6px_6px_0_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[10px_10px_0_rgba(0,0,0,1)] hover:bg-red-500 transition-all uppercase disabled:opacity-50"
+              className="w-full text-2xl font-bold p-6 bg-stone-800 text-amber-50 rounded shadow-lg hover:bg-stone-700 transition-all uppercase tracking-widest disabled:opacity-50"
             >
-              {isLoading ? "Creating..." : "Start Trial"}
+              {isLoading ? "Preparing Docket..." : "Start Trial"}
             </button>
           </div>
         </motion.div>
 
+        {/* JOIN ROOM */}
         <motion.div 
-          initial={{ x: 200, opacity: 0, rotate: 15, scale: 0.5 }}
-          animate={{ x: 0, opacity: 1, rotate: 2, scale: 1 }}
-          transition={{ type: "spring", stiffness: 150, damping: 10, delay: 0.4 }}
-          className="bg-white border-8 border-slate-900 p-8 shadow-[12px_12px_0_rgba(0,0,0,0.8)] space-y-6 flex flex-col transform hover:scale-105 transition-transform duration-200"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="bg-amber-50/95 border border-stone-400 p-10 shadow-2xl space-y-8 flex flex-col"
         >
-          <div className="space-y-2 bg-indigo-500 border-4 border-slate-900 p-4 -mt-12 -mr-12 w-[110%] -rotate-2 shadow-[4px_4px_0_rgba(0,0,0,0.8)] self-end relative right-[-32px]">
-            <h2 className="text-4xl font-black text-white flex items-center justify-center gap-3 uppercase">
-              <Users className="text-white fill-white" /> Enter Courtroom
+          <div className="space-y-2 pb-6 border-b-2 border-stone-300">
+            <h2 className="text-3xl font-bold text-stone-900 flex items-center justify-center gap-3">
+              <Users className="text-stone-800" /> Enter Courtroom
             </h2>
-            <p className="text-indigo-100 text-lg font-bold text-center">Look at the host screen for the code</p>
+            <p className="text-stone-600 text-lg text-center italic">Provide the docket number assigned</p>
           </div>
 
           <form onSubmit={handleJoinRoom} className="space-y-6 flex-grow flex flex-col pt-4">
-            <input
-              type="text"
-              placeholder="ROOM CODE"
-              maxLength={4}
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="w-full text-4xl md:text-5xl font-black text-center p-6 border-4 border-slate-900 rounded-xl bg-yellow-200 uppercase tracking-[0.4em] placeholder-slate-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-[inset_4px_4px_0_rgba(0,0,0,0.1)]"
-            />
-            <input
-              type="text"
-              placeholder="YOUR NICKNAME"
-              maxLength={15}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full text-3xl font-black text-center p-4 border-4 border-slate-900 rounded-xl bg-slate-100 uppercase tracking-wider placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-inner"
-            />
-            {error && <p className="text-red-600 font-black text-center bg-red-200 border-4 border-red-600 py-3 rounded-xl uppercase animate-bounce shadow-[4px_4px_0_rgba(220,38,38,1)]">{error}</p>}
+            <div>
+              <label className="block text-sm font-bold text-stone-600 uppercase tracking-widest mb-2">Docket Reference</label>
+              <input
+                type="text"
+                placeholder="CODE"
+                maxLength={4}
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                className="w-full text-4xl font-bold text-center p-4 border border-stone-300 bg-stone-100 uppercase tracking-[0.3em] focus:outline-none focus:border-stone-800 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-600 uppercase tracking-widest mb-2">Clerk's Signature (Your Name)</label>
+              <input
+                type="text"
+                placeholder="Entry..."
+                maxLength={15}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full text-2xl text-center p-4 border-b-2 border-stone-400 bg-transparent focus:outline-none focus:border-stone-800 transition-all font-serif"
+              />
+            </div>
+            
+            {error && <p className="text-red-800 font-bold text-center bg-red-100/50 py-3 rounded italic">{error}</p>}
+            
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full text-3xl font-black p-6 bg-indigo-500 text-white rounded-2xl border-4 border-slate-900 shadow-[6px_6px_0_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[10px_10px_0_rgba(0,0,0,1)] hover:bg-indigo-400 transition-all uppercase disabled:opacity-50 mt-auto"
+              className="w-full text-2xl font-bold p-6 bg-stone-200 text-stone-900 border border-stone-400 rounded shadow-lg hover:bg-stone-300 transition-all uppercase tracking-widest disabled:opacity-50 mt-auto"
             >
-              {isLoading ? "Joining..." : "Join Game"}
+              {isLoading ? "Swearing In..." : "Join Proceeding"}
             </button>
           </form>
         </motion.div>

@@ -78,14 +78,15 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
   }, [phase, currentRoastIndex, roasts.length]);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-12 relative z-10 w-full min-h-screen pt-12">
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-12 relative z-10 min-h-screen pt-12 font-[Georgia,serif]">
       {/* Background Courtroom Image */}
       {phase !== 'loading' && (
         <div 
-          className="fixed inset-0 z-[-1] bg-cover bg-center" 
+          className="fixed inset-0 z-[-1] bg-cover bg-center transition-all duration-1000" 
           style={{ backgroundImage: "url('/courtroom.png')" }}
         >
-          <div className="absolute inset-0 bg-slate-900/40 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-stone-900/60 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-amber-900/10 mix-blend-overlay" />
         </div>
       )}
 
@@ -93,27 +94,18 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
       {phase === 'arguments' && submissions[currentArgIndex] && (
         <motion.div 
           key={currentArgIndex}
-          initial={{ opacity: 0, scale: 0.1, y: 150, rotate: -15 }}
-          animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-          exit={{ opacity: 0, scale: 0.5, x: -300 }}
-          transition={{ type: "spring", stiffness: 200, damping: 10 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="flex flex-col items-center w-full max-w-3xl justify-center min-h-[50vh]"
         >
-          <div className="w-full relative">
-            {/* The Speech Bubble */}
-            <div className="bg-white text-slate-900 border-8 border-slate-800 rounded-3xl rounded-br-none p-8 md:p-12 mb-8 shadow-[12px_12px_0_rgba(0,0,0,0.6)] relative z-10">
-              <p className="text-3xl md:text-5xl font-black italic mb-2">"{submissions[currentArgIndex].argument_text}"</p>
-            </div>
-            {/* The Cartoonish Speaker */}
-            <div className="flex justify-end w-full pr-8">
-              <div className="flex flex-col items-center animate-bounce">
-                <div className="bg-yellow-400 border-4 border-slate-800 w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-[4px_4px_0_rgba(0,0,0,0.5)]">
-                  🗣️
-                </div>
-                <div className="bg-slate-800 text-white font-bold px-4 py-2 mt-2 rounded-xl border-2 border-slate-600">
-                  {submissions[currentArgIndex].players.nickname}
-                </div>
-              </div>
+          <div className="w-full relative bg-amber-50/95 border-x-4 border-y-2 border-stone-800 p-12 shadow-2xl">
+            <p className="text-3xl md:text-5xl font-bold text-stone-900 italic leading-relaxed text-center">
+              "{submissions[currentArgIndex].argument_text}"
+            </p>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-stone-800 text-amber-50 font-bold px-8 py-2 text-xl tracking-widest uppercase border-2 border-amber-50 shadow-lg">
+              Counsel {submissions[currentArgIndex].players.nickname}
             </div>
           </div>
         </motion.div>
@@ -124,44 +116,43 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
         <motion.div
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
+           transition={{ duration: 1 }}
            className="w-full flex w-full flex-col items-center"
         >
           <motion.div 
-            initial={{ y: -100, scale: 0.5, rotate: -20 }}
-            animate={{ y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 150, damping: 12, delay: 0.2 }}
-            className="flex items-center gap-4 text-yellow-400"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="flex items-center gap-6 text-stone-800 border-b-4 border-double border-stone-800 pb-4 mb-12"
           >
-            <Gavel size={60} className="rotate-12" />
-            <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter drop-shadow-[0_4px_0_rgba(180,83,9,1)]">
+            <Gavel size={50} />
+            <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-widest">
               The Verdict
             </h1>
           </motion.div>
 
-          {/* The Comic Speech Bubble */}
+          {/* The Vintage Document Envelope */}
           <div className="relative w-full max-w-4xl min-h-[250px] mb-24 mt-8">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.5, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="bg-white w-full border-8 border-slate-900 shadow-[15px_15px_0_rgba(0,0,0,0.7)] p-8 md:p-12 rounded-3xl rounded-br-none relative z-20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="bg-amber-50/95 w-full border border-stone-400 shadow-2xl p-12 relative z-20"
             >
-              <p className="text-3xl md:text-5xl font-black italic leading-tight text-slate-900">
+              <div className="absolute top-4 left-4 right-4 bottom-4 border border-stone-300 pointer-events-none" />
+              <p className="text-3xl md:text-4xl font-bold italic leading-relaxed text-stone-800 font-serif relative z-10 text-center">
                 "{displayedSpeech}"
               </p>
             </motion.div>
             
-            {/* The Judge Character Panel inside the Speech Bubble context */}
+            {/* The Judge Character Panel */}
             <motion.div 
-              initial={{ y: 300, rotate: 20, scale: 0.1 }}
-              animate={{ y: 0, rotate: -5, scale: 1 }}
-              transition={{ type: "spring", stiffness: 100, damping: 10, delay: 0.3 }}
-              className="absolute -bottom-32 md:-bottom-48 -right-8 md:-right-16 z-30 bg-white p-2 border-8 border-slate-900 rounded-2xl shadow-[10px_10px_0_rgba(0,0,0,0.8)] w-48 md:w-64"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+              className="absolute -bottom-32 md:-bottom-48 -right-8 md:-right-16 z-30 w-48 md:w-64"
             >
-              <img src="/judge.png" alt="Judge Bartholomew" className="w-full h-auto rounded-xl" />
-              <div className="absolute -top-4 -left-6 bg-red-600 text-white font-black px-4 py-1 text-lg border-4 border-slate-900 rotate-[-10deg] shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                JUDGE
-              </div>
+              <img src="/judge.png" alt="Judge Bartholomew" className="w-full h-auto drop-shadow-2xl" />
             </motion.div>
           </div>
 
@@ -169,50 +160,50 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
           <AnimatePresence>
             {phase === 'roasts' && (
               <motion.div 
-                initial={{ scale: 0, rotate: -10 }}
-                animate={{ scale: 1, rotate: 0 }}
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-3xl p-8 md:p-12 shadow-[0_0_60px_rgba(234,179,8,0.4)] text-center w-full max-w-2xl border-4 border-yellow-300"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="bg-stone-800 border-2 border-amber-50/50 p-12 text-center w-full max-w-2xl shadow-2xl mb-12 relative overflow-hidden"
               >
-                <div className="flex justify-center mb-4">
-                  <Star size={60} className="fill-yellow-100 text-yellow-100 animate-pulse" />
+                <div className="absolute inset-0 bg-[url('/exterior.png')] opacity-10 mix-blend-overlay pointer-events-none bg-cover" />
+                <h2 className="text-2xl font-bold text-amber-100/70 mb-4 tracking-widest uppercase border-b border-amber-100/20 pb-4">In Favor Of</h2>
+                <div className="text-6xl font-bold text-amber-50 uppercase tracking-widest bg-stone-900/50 py-4 px-8 inline-block shadow-inner">
+                  {verdict.verdict_json.winner_nickname}
                 </div>
-                <p className="text-xl font-bold text-yellow-900 uppercase tracking-widest mb-2">Round Winner</p>
-                <h2 className="text-5xl md:text-7xl font-black text-slate-900 uppercase">{verdict.verdict_json.winner_nickname}</h2>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* The Roasts */}
-          <div className="grid md:grid-cols-2 gap-6 w-full mt-8">
-            <AnimatePresence>
-              {roasts.slice(0, currentRoastIndex + 1).map((roast, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="bg-slate-900 border-2 border-red-500/50 rounded-2xl p-6 shadow-[4px_4px_0_rgba(239,68,68,0.5)] relative"
-                >
-                  <div className="absolute -top-4 -left-4 bg-red-500 text-white font-black px-4 py-1 rounded-full rotate-[-5deg] border-2 border-slate-900 shadow-md">
-                    {roast.nickname}
-                  </div>
-                  <p className="text-xl font-medium text-slate-300 italic mt-2">
-                    "{roast.roast}"
-                  </p>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {/* The Roasts Reveal */}
+          <AnimatePresence>
+            {roasts.slice(0, currentRoastIndex + 1).map((r, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="w-full max-w-4xl bg-stone-100 border border-stone-300 p-8 shadow-lg flex flex-col md:flex-row items-center gap-8 mb-6"
+              >
+                <div className="bg-stone-800 text-amber-50 font-bold px-6 py-2 text-xl whitespace-nowrap tracking-widest uppercase">
+                  {r.nickname}
+                </div>
+                <div className="text-2xl text-stone-700 italic border-l-4 border-stone-300 pl-6 w-full leading-relaxed font-serif">
+                  "{r.roast}"
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           {/* Next Round Button */}
           {isHost && phase === 'roasts' && currentRoastIndex >= roasts.length && (
             <motion.button
-              initial={{ opacity: 0, y: 50, scale: 0.5 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1 }}
               onClick={onNextRound}
-              className="jackbox-button flex items-center justify-center gap-3 mt-12 w-full max-w-sm"
+              className="text-2xl font-bold px-12 py-6 bg-stone-800 text-amber-50 border border-stone-400 shadow-xl hover:bg-stone-700 transition-all uppercase flex items-center justify-center gap-4 tracking-widest mt-12 w-full max-w-sm"
             >
-              {verdict.round >= 5 ? "Final Leaderboard" : "Next Round"} <ArrowRight />
+              {verdict.round >= 5 ? "Adjourn Assembly" : "Proceed to Next Case"} <ArrowRight />
             </motion.button>
           )}
         </motion.div>

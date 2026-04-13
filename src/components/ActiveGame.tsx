@@ -22,76 +22,77 @@ export default function ActiveGame({ room, player, hasSubmitted, onSubmitArgumen
   }, [timeRemaining, hasSubmitted, argument, onSubmitArgument]);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-8 relative z-10 pt-10">
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-8 relative z-10 pt-10 font-[Georgia,serif]">
       {/* Timer */}
       <motion.div 
-        initial={{ y: -50, opacity: 0, scale: 0.5 }}
-        animate={{ y: 0, opacity: 1, scale: timeRemaining <= 10 ? [1, 1.2, 1] : 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 10, repeat: timeRemaining <= 10 ? Infinity : 0 }}
-        className={`flex items-center gap-3 text-5xl md:text-7xl font-black border-8 px-8 py-4 shadow-[10px_10px_0_rgba(0,0,0,1)] bg-white ${timeRemaining <= 10 ? 'text-red-600 border-red-600 rotate-2' : 'text-slate-900 border-slate-900 -rotate-2'}`}
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className={`flex items-center gap-4 text-4xl md:text-5xl font-bold border-b-2 px-8 py-4 bg-amber-50/95 shadow-lg ${timeRemaining <= 10 ? 'text-red-800 border-red-800' : 'text-stone-800 border-stone-800'}`}
       >
-        <Clock size={48} className={timeRemaining <= 10 ? 'animate-pulse' : ''} />
-        {timeRemaining}s
+        <Clock size={36} className={timeRemaining <= 10 ? 'animate-pulse text-red-800' : 'text-stone-700'} />
+        {timeRemaining}
       </motion.div>
 
       {/* Scenario Header */}
       <motion.div 
-        initial={{ scale: 0.1, opacity: 0, rotate: 10 }}
-        animate={{ scale: 1, opacity: 1, rotate: 1 }}
-        transition={{ type: "spring", stiffness: 100, damping: 12, delay: 0.1 }}
-        className="text-center bg-yellow-400 border-8 border-slate-900 p-8 md:p-12 shadow-[15px_15px_0_rgba(0,0,0,1)] w-full relative overflow-hidden flex flex-col"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+        className="text-center bg-amber-50/95 border border-stone-400 p-8 md:p-12 shadow-2xl w-full relative overflow-hidden flex flex-col"
       >
-        <div className="absolute top-4 left-[-40px] bg-red-600 text-white font-black px-12 py-1 rotate-[-25deg] border-4 border-slate-900 shadow-[4px_4px_0_rgba(0,0,0,1)] text-2xl uppercase">
-          Case #{room.current_round}
+        <div className="absolute top-0 left-0 bg-stone-800 text-amber-50 font-bold px-8 py-2 text-sm uppercase tracking-widest">
+          Docket #{room.current_round}
         </div>
-        <p className="text-slate-900 font-bold uppercase tracking-widest mt-8 mb-4 text-xl">The Allegation</p>
-        <h2 className="text-4xl md:text-6xl font-black leading-tight text-slate-900">
+        <p className="text-stone-600 font-bold uppercase tracking-widest mt-8 mb-4 text-sm italic">The Allegation Presiding</p>
+        <h2 className="text-3xl md:text-5xl font-bold leading-tight text-stone-900 border-b-2 border-stone-300 pb-8">
           "{room.current_scenario}"
         </h2>
       </motion.div>
 
       {/* Input Area */}
       {!player ? (
-        <div className="text-center p-8 bg-slate-900 border-8 border-slate-500 w-full shadow-[10px_10px_0_rgba(0,0,0,1)] rotate-[-1deg]">
-          <p className="text-4xl font-black text-slate-400 uppercase">You are spectating.</p>
+        <div className="text-center p-8 bg-amber-50 border border-stone-400 w-full shadow-lg">
+          <p className="text-2xl font-bold text-stone-600 uppercase tracking-widest">Gallery Spectator</p>
         </div>
       ) : hasSubmitted ? (
         <motion.div 
-          initial={{ y: 200, opacity: 0, rotate: 10, scale: 0.5 }}
-          animate={{ y: 0, opacity: 1, rotate: -2, scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className="text-center p-12 bg-green-500 border-8 border-slate-900 shadow-[15px_15px_0_rgba(0,0,0,1)] w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-center p-12 bg-amber-50/95 border-t-8 border-stone-800 shadow-2xl w-full"
         >
-          <div className="text-white text-8xl mb-6">✓</div>
-          <h3 className="text-5xl md:text-7xl font-black text-slate-900 mb-4 uppercase drop-shadow-[2px_2px_0_rgba(255,255,255,0.5)]">Argument Submitted!</h3>
-          <p className="text-2xl font-bold text-slate-900">Waiting for other players or the clock to run out...</p>
+          <div className="text-stone-800 text-5xl mb-6">🖋️</div>
+          <h3 className="text-4xl md:text-5xl font-bold text-stone-900 mb-4 tracking-widest">Deposition Submitted</h3>
+          <p className="text-xl font-bold text-stone-600 italic">Please hold for the remaining counsel...</p>
         </motion.div>
       ) : (
         <motion.div 
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 150, damping: 15, delay: 0.2 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="w-full space-y-6"
         >
-          <div className="relative">
+          <div className="relative bg-amber-50/95 p-8 border border-stone-400 shadow-2xl">
+            <label className="block text-stone-700 font-bold uppercase tracking-widest mb-4 border-b border-stone-300 pb-2 text-sm">Draft Your Argument</label>
             <textarea
-              className="w-full min-h-[250px] resize-none text-3xl font-black p-8 border-8 border-slate-900 bg-white placeholder-slate-400 shadow-[inset_6px_6px_0_rgba(0,0,0,0.1),_10px_10px_0_rgba(0,0,0,1)] focus:outline-none focus:ring-8 focus:ring-yellow-400 transition-all rounded-none"
-              placeholder="Plead your case to Judge Bartholomew..."
+              className="w-full min-h-[250px] resize-none text-2xl p-4 border-none bg-transparent placeholder-stone-400 focus:outline-none focus:ring-0 leading-relaxed italic"
+              placeholder="May it please the court..."
               maxLength={500}
               value={argument}
               onChange={(e) => setArgument(e.target.value)}
             />
-            <div className={`absolute bottom-6 right-6 font-black text-2xl px-4 py-2 border-4 border-slate-900 bg-white shadow-[4px_4px_0_rgba(0,0,0,1)] ${argument.length >= 500 ? 'text-red-600 bg-red-100' : 'text-slate-900'}`}>
-              {argument.length}/500
+            <div className={`absolute bottom-6 right-6 font-bold text-lg px-4 py-2 border-t border-stone-300 ${argument.length >= 500 ? 'text-red-800' : 'text-stone-500'}`}>
+              Word Count: {argument.length}/500
             </div>
           </div>
           
           <button
             onClick={() => onSubmitArgument(argument)}
             disabled={argument.trim().length === 0}
-            className="w-full text-4xl font-black p-8 bg-blue-500 text-white border-8 border-slate-900 shadow-[10px_10px_0_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[15px_15px_0_rgba(0,0,0,1)] hover:bg-blue-400 transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 rotate-1"
+            className="w-full text-2xl font-bold p-6 bg-stone-800 text-amber-50 border border-stone-400 shadow-lg hover:bg-stone-700 transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4"
           >
-            Submit Argument <Send size={40} className="fill-white" />
+            Submit to the Clerk <Send size={24} className="text-amber-50" />
           </button>
         </motion.div>
       )}
