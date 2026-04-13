@@ -11,44 +11,56 @@ interface GameLobbyProps {
 
 export default function GameLobby({ room, players, isHost, onStartGame }: GameLobbyProps) {
   return (
-    <div className="flex flex-col items-center justify-center space-y-8 w-full">
-      <motion.div 
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="text-center space-y-4"
+    <div className="flex flex-col items-center justify-center space-y-12 w-full min-h-screen relative z-10 pt-10">
+      {/* Background Exterior Image */}
+      <div 
+        className="fixed inset-0 z-[-1] bg-cover bg-center" 
+        style={{ backgroundImage: "url('/exterior.png')" }}
       >
-        <p className="text-2xl font-bold text-slate-400 tracking-widest uppercase">Room Code</p>
-        <div className="text-6xl md:text-8xl font-black tracking-[0.2em] bg-slate-800 border-4 border-slate-700 py-4 px-8 rounded-2xl shadow-xl flex items-center justify-center">
+        <div className="absolute inset-0 bg-indigo-900/60 mix-blend-multiply" />
+      </div>
+
+      <motion.div 
+        initial={{ y: -50, opacity: 0, rotate: 10, scale: 0.8 }}
+        animate={{ y: 0, opacity: 1, rotate: -3, scale: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 10 }}
+        className="text-center bg-white p-8 border-8 border-slate-900 shadow-[15px_15px_0_rgba(0,0,0,1)] relative"
+      >
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-yellow-400 px-6 py-2 border-4 border-slate-900 shadow-[4px_4px_0_rgba(0,0,0,1)] rotate-[-5deg]">
+          <p className="text-xl font-black text-slate-900 tracking-widest uppercase">Room Code</p>
+        </div>
+        <div className="text-7xl md:text-9xl font-black tracking-[0.2em] text-slate-900 mt-4 uppercase">
           {room.code}
         </div>
       </motion.div>
 
-      <div className="w-full max-w-2xl bg-slate-800/50 backdrop-blur border border-slate-700 rounded-3xl p-8 shadow-2xl">
-        <h2 className="text-3xl font-bold mb-6 flex items-center justify-center gap-3">
-          <Users className="text-yellow-400" /> Players Joined ({players.length})
+      <div className="w-full max-w-4xl bg-orange-500 border-8 border-slate-900 shadow-[15px_15px_0_rgba(0,0,0,1)] rounded-3xl p-8 md:p-12 relative rotate-1">
+        <h2 className="text-4xl md:text-5xl font-black mb-8 flex items-center justify-center gap-4 text-white uppercase drop-shadow-[4px_4px_0_rgba(0,0,0,0.8)]">
+          <Users className="text-white w-12 h-12" /> Players Joined ({players.length})
         </h2>
         
-        <div className="flex flex-wrap justify-center gap-4 min-h-[100px]">
+        <div className="flex flex-wrap justify-center gap-6 min-h-[150px]">
           <AnimatePresence>
             {players.length === 0 && (
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-slate-500 italic"
+                className="text-white text-2xl font-bold animate-pulse p-8"
               >
-                Waiting for others to join...
+                Waiting for victims to arrive...
               </motion.p>
             )}
-            {players.map((player) => (
+            {players.map((player, idx) => (
               <motion.div
                 key={player.id}
-                initial={{ scale: 0, rotate: -10 }}
-                animate={{ scale: 1, rotate: 0 }}
+                initial={{ scale: 0, rotate: -20, y: 50 }}
+                animate={{ scale: 1, rotate: idx % 2 === 0 ? 5 : -5, y: 0 }}
                 exit={{ scale: 0 }}
-                className="bg-slate-700 font-bold px-6 py-3 rounded-full border-2 border-yellow-500/50 shadow-lg text-xl"
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="bg-white text-slate-900 font-black px-8 py-4 rounded-xl border-4 border-slate-900 shadow-[6px_6px_0_rgba(0,0,0,1)] text-2xl flex items-center gap-3 animate-bounce"
               >
-                {player.nickname}
+                <span className="text-3xl">{['😎','😜','🤬','🤡','🕵️','🤠','💀','👽'][idx % 8]}</span> {player.nickname}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -57,19 +69,24 @@ export default function GameLobby({ room, players, isHost, onStartGame }: GameLo
 
       {isHost ? (
         <motion.button
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0.1, opacity: 0, y: 100 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 150, damping: 12, delay: 0.2 }}
           onClick={onStartGame}
           disabled={players.length < 1}
-          className="jackbox-button flex items-center gap-3 w-auto max-w-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-4xl font-black p-8 bg-green-500 text-white rounded-2xl border-8 border-slate-900 shadow-[10px_10px_0_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[15px_15px_0_rgba(0,0,0,1)] hover:bg-green-400 transition-all uppercase disabled:opacity-50 flex items-center gap-4 rotate-[-2deg]"
         >
-          <Play size={24} /> 
-          {players.length < 1 ? "Waiting for players..." : "Start Game"}
+          <Play size={40} className="fill-white" /> 
+          {players.length < 1 ? "Waiting for players..." : "Start Trial!"}
         </motion.button>
       ) : (
-        <p className="text-slate-400 text-xl font-medium animate-pulse mt-8">
-          Waiting for host to start...
-        </p>
+        <motion.div 
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-slate-900 text-yellow-400 font-black text-2xl md:text-4xl p-6 border-8 border-slate-900 shadow-[10px_10px_0_rgba(0,0,0,0.8)] rotate-2 animate-pulse"
+        >
+          Waiting for the Host...
+        </motion.div>
       )}
     </div>
   );

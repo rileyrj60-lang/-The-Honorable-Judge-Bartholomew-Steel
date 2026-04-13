@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Room, Player, Verdict as VerdictType } from "@/lib/types";
 import { getRandomScenario } from "@/lib/scenarios";
 
@@ -28,6 +29,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(ROUND_TIME);
   const [verdict, setVerdict] = useState<VerdictType | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Initial Fetch & Realtime Subscription
   useEffect(() => {
@@ -77,7 +79,9 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     init();
 
     // Setup Subscriptions
-    const roomSub = supabase.channel(`room:${code}`)
+    const subChannel = supabase.channel(`game_room:${code}`, { config: { broadcast: { self: false } } });
+    
+    subChannel
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `code=eq.${code}` }, payload => {
         const newRoom = payload.new as Room;
         setRoom(newRoom);
@@ -87,11 +91,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           setVerdict(null);
         }
       })
-      .subscribe();
-
-    const playersSub = supabase.channel(`players:${code}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, async () => {
-        // Just refetch players to be safe, easier to keep scores in sync
         const { data: rData } = await supabase.from("rooms").select("id").eq("code", code).single();
         if (rData) {
           const { data } = await supabase.from("players").select("*").eq("room_id", rData.id);
@@ -104,27 +104,39 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           }
         }
       })
-      .subscribe();
-
-    const verdictsSub = supabase.channel(`verdicts:${code}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verdicts' }, payload => {
         if (mounted) setVerdict(payload.new as VerdictType);
       })
+      .on('broadcast', { event: 'tick' }, payload => {
+        if (!isHost && mounted) {
+          setTimeRemaining(payload.payload.time);
+        }
+      })
       .subscribe();
+
+    channelRef.current = subChannel;
 
     return () => {
       mounted = false;
-      supabase.removeChannel(roomSub);
-      supabase.removeChannel(playersSub);
-      supabase.removeChannel(verdictsSub);
+      supabase.removeChannel(subChannel);
     };
-  }, [code, nickname, router]);
+  }, [code, nickname, router, isHost]);
 
-  // Timer logic for Active Game
+  // Timer logic for Active Game - Host Controls It!
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (room?.status === 'playing' && timeRemaining > 0) {
-      timer = setTimeout(() => setTimeRemaining(prev => prev - 1), 1000);
+    if (room?.status === 'playing' && timeRemaining > 0 && isHost) {
+      timer = setTimeout(() => {
+        const newTime = timeRemaining - 1;
+        setTimeRemaining(newTime);
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'tick',
+            payload: { time: newTime }
+          });
+        }
+      }, 1000);
     } else if (room?.status === 'playing' && timeRemaining === 0 && isHost) {
       // Time's up, host calls the judge API
       callJudge();
@@ -196,10 +208,35 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     }
   };
 
-  if (!room) return <div className="text-white text-loader">Loading...</div>;
+  if (!room) return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-900">
+      <div className="text-white text-4xl font-black animate-bounce uppercase tracking-widest">
+        Loading Courtroom...
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen py-12 px-4 flex flex-col pt-8">
+    <div className="min-h-screen p-4 md:p-12 relative z-10 w-full overflow-hidden flex flex-col justify-center">
+      {/* Dynamic Backgrounds controlled centrally! */}
+      {room.status === 'lobby' && (
+        <div className="fixed inset-0 z-[-1] bg-cover bg-center" style={{ backgroundImage: "url('/exterior.png')" }}>
+          <div className="absolute inset-0 bg-indigo-900/40 mix-blend-multiply" />
+        </div>
+      )}
+      
+      {room.status === 'playing' && (
+        <div className="fixed inset-0 z-[-1] bg-cover bg-center" style={{ backgroundImage: "url('/exterior.png')" }}>
+          <div className="absolute inset-0 bg-red-900/60 mix-blend-multiply" />
+        </div>
+      )}
+
+      {/* verdict screen actually handles its own background for the transition, but we can set a base */}
+      {(room.status === 'finished') && (
+        <div className="fixed inset-0 z-[-1] bg-cover bg-center" style={{ backgroundImage: "url('/exterior.png')" }}>
+          <div className="absolute inset-0 bg-slate-900/80 mix-blend-multiply" />
+        </div>
+      )}
       {room.status === 'lobby' && (
         <GameLobby 
           room={room} 
