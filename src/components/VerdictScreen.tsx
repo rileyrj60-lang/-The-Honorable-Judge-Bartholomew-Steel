@@ -138,16 +138,32 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
             </h1>
           </motion.div>
 
-          {/* The Speech Box */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="jackbox-card w-full border-yellow-500/50 min-h-[200px]"
-          >
-            <p className="text-2xl md:text-4xl font-bold leading-relaxed text-slate-100">
-              "{displayedSpeech}"
-            </p>
-          </motion.div>
+          {/* The Comic Speech Bubble */}
+          <div className="relative w-full max-w-4xl min-h-[250px] mb-24 mt-8">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.5, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="bg-white w-full border-8 border-slate-900 shadow-[15px_15px_0_rgba(0,0,0,0.7)] p-8 md:p-12 rounded-3xl rounded-br-none relative z-20"
+            >
+              <p className="text-3xl md:text-5xl font-black italic leading-tight text-slate-900">
+                "{displayedSpeech}"
+              </p>
+            </motion.div>
+            
+            {/* The Judge Character Panel inside the Speech Bubble context */}
+            <motion.div 
+              initial={{ y: 300, rotate: 20, scale: 0.1 }}
+              animate={{ y: 0, rotate: -5, scale: 1 }}
+              transition={{ type: "spring", stiffness: 100, damping: 10, delay: 0.3 }}
+              className="absolute -bottom-32 md:-bottom-48 -right-8 md:-right-16 z-30 bg-white p-2 border-8 border-slate-900 rounded-2xl shadow-[10px_10px_0_rgba(0,0,0,0.8)] w-48 md:w-64"
+            >
+              <img src="/judge.png" alt="Judge Bartholomew" className="w-full h-auto rounded-xl" />
+              <div className="absolute -top-4 -left-6 bg-red-600 text-white font-black px-4 py-1 text-lg border-4 border-slate-900 rotate-[-10deg] shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                JUDGE
+              </div>
+            </motion.div>
+          </div>
 
           {/* The Winner Announcement */}
           <AnimatePresence>
