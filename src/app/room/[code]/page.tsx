@@ -17,6 +17,7 @@ import { Gavel } from "lucide-react";
 
 const ROUND_TIME = 60;
 const SPEED_ROUND_TIME = 15;
+const VOTE_TIMEOUT = 10; // seconds before auto-proceeding
 const MAX_ROUNDS = 5;
 
 export default function RoomPage({ params }: { params: Promise<{ code: string }> }) {
@@ -39,9 +40,61 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   const [hasVoted, setHasVoted] = useState(false);
   const [voteResults, setVoteResults] = useState<{ player_id: string; nickname: string; votes: number }[] | null>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [voteTimeRemaining, setVoteTimeRemaining] = useState(VOTE_TIMEOUT);
+
+  // Track if judge was already called this round to prevent double-calls
+  const judgeCalledRef = useRef(false);
 
   // Emoji reactions enabled during argument viewing in verdict
   const [emojisEnabled, setEmojisEnabled] = useState(false);
+
+  // Helper: calculate vote results and proceed to judge
+  const finalizeVotesAndCallJudge = useCallback(async (roomId: string, round: number) => {
+    if (judgeCalledRef.current) return; // Prevent double-calls
+    judgeCalledRef.current = true;
+
+    // Fetch whatever votes exist (may be partial if timeout)
+    const { data: votes } = await supabase
+      .from("votes")
+      .select("*")
+      .eq("room_id", roomId)
+      .eq("round", round);
+
+    const { data: currentPlayers } = await supabase
+      .from("players")
+      .select("id, nickname")
+      .eq("room_id", roomId);
+
+    const results = (currentPlayers || []).map(p => ({
+      player_id: p.id,
+      nickname: p.nickname,
+      votes: (votes || []).filter((v: any) => v.voted_for_player_id === p.id).length,
+    })).sort((a, b) => b.votes - a.votes);
+
+    setVoteResults(results);
+
+    // Broadcast results to everyone
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'vote_results',
+        payload: { results },
+      });
+    }
+
+    // After showing results briefly, call the judge
+    setTimeout(() => {
+      fetch('/api/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_id: roomId,
+          round: round,
+          vote_results: results
+        })
+      }).catch(console.error);
+    }, 4000);
+  }, []);
 
   // Initial Fetch & Realtime Subscription
   useEffect(() => {
@@ -86,6 +139,16 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           .single();
         if (mounted && vData) setVerdict(vData);
       }
+
+      // If we loaded into voting status, load submissions
+      if (roomData.status === "voting") {
+        const { data: subData } = await supabase
+          .from("submissions")
+          .select("*, players(nickname)")
+          .eq("room_id", roomData.id)
+          .eq("round", roomData.current_round);
+        if (mounted && subData) setSubmissions(subData);
+      }
     }
 
     init();
@@ -104,12 +167,15 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           setSubmissions([]);
           setVerdict(null);
           setEmojisEnabled(false);
+          judgeCalledRef.current = false;
           // Set timer based on round mode
           const time = newRoom.round_mode === 'speed' ? SPEED_ROUND_TIME : ROUND_TIME;
           setTimeRemaining(time);
         }
         if (newRoom.status === 'voting') {
           setEmojisEnabled(true);
+          setVoteTimeRemaining(VOTE_TIMEOUT);
+          judgeCalledRef.current = false;
           // Load submissions for voting
           loadSubmissions(newRoom.id, newRoom.current_round);
         }
@@ -137,46 +203,44 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         if (!rData) return;
         const { data: votes } = await supabase
           .from("votes")
-          .select("*")
+          .select("id")
           .eq("room_id", rData.id)
           .eq("round", rData.current_round);
         const { data: currentPlayers } = await supabase
           .from("players")
-          .select("id, nickname")
+          .select("id")
           .eq("room_id", rData.id);
         if (votes && currentPlayers && votes.length >= currentPlayers.length) {
-          // All votes in — calculate results
-          const results = currentPlayers.map(p => ({
-            player_id: p.id,
-            nickname: p.nickname,
-            votes: votes.filter((v: any) => v.voted_for_player_id === p.id).length,
-          })).sort((a, b) => b.votes - a.votes);
-          setVoteResults(results);
-          // Broadcast results to everyone
-          if (channelRef.current) {
-            channelRef.current.send({
-              type: 'broadcast',
-              event: 'vote_results',
-              payload: { results },
-            });
-          }
-          // After showing results briefly, call the judge
-          setTimeout(() => {
-            fetch('/api/judge', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                room_id: rData.id,
-                round: rData.current_round,
-                vote_results: results
-              })
-            }).catch(console.error);
-          }, 4000);
+          finalizeVotesAndCallJudge(rData.id, rData.current_round);
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'submissions' }, async () => {
+        // Host checks if all submissions are in whenever ANY submission is inserted
+        if (!isHost || !mounted) return;
+        const { data: rData } = await supabase.from("rooms").select("id, current_round, status").eq("code", code).single();
+        if (!rData || rData.status !== 'playing') return;
+        const { data: subs } = await supabase
+          .from("submissions")
+          .select("id")
+          .eq("room_id", rData.id)
+          .eq("round", rData.current_round);
+        const { data: currentPlayers } = await supabase
+          .from("players")
+          .select("id")
+          .eq("room_id", rData.id);
+        if (subs && currentPlayers && subs.length >= currentPlayers.length) {
+          // Everyone submitted! Move to voting
+          supabase.from("rooms").update({ status: "voting" }).eq("id", rData.id).then(() => {});
         }
       })
       .on('broadcast', { event: 'tick' }, payload => {
         if (!isHost && mounted) {
           setTimeRemaining(payload.payload.time);
+        }
+      })
+      .on('broadcast', { event: 'vote_tick' }, payload => {
+        if (!isHost && mounted) {
+          setVoteTimeRemaining(payload.payload.time);
         }
       })
       .on('broadcast', { event: 'vote_results' }, payload => {
@@ -192,7 +256,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       mounted = false;
       supabase.removeChannel(subChannel);
     };
-  }, [code, nickname, router, isHost]);
+  }, [code, nickname, router, isHost, finalizeVotesAndCallJudge]);
 
   // Load submissions for the voting phase
   const loadSubmissions = async (roomId: string, round: number) => {
@@ -221,39 +285,42 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       }, 1000);
     } else if (room?.status === 'playing' && timeRemaining === 0 && isHost) {
       // Time's up — move to voting phase
-      moveToVoting();
+      supabase.from("rooms").update({ status: "voting" }).eq("id", room.id).then(() => {});
     }
     return () => clearTimeout(timer);
-  }, [room?.status, timeRemaining, isHost]);
+  }, [room?.status, room?.id, timeRemaining, isHost]);
 
-  const moveToVoting = async () => {
-    if (!room) return;
-    try {
-      await supabase
-        .from("rooms")
-        .update({ status: "voting" })
-        .eq("id", room.id);
-    } catch (e) {
-      console.error("Failed to move to voting", e);
+  // ═══════════════════════════════════════
+  // VOTE TIMEOUT — 10 second countdown
+  // If not all votes are in after 10s, proceed anyway
+  // ═══════════════════════════════════════
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (room?.status === 'voting' && voteTimeRemaining > 0 && isHost && !voteResults) {
+      timer = setTimeout(() => {
+        const newTime = voteTimeRemaining - 1;
+        setVoteTimeRemaining(newTime);
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'vote_tick',
+            payload: { time: newTime }
+          });
+        }
+      }, 1000);
+    } else if (room?.status === 'voting' && voteTimeRemaining === 0 && isHost && !voteResults) {
+      // Timeout! Proceed with whatever votes we have
+      finalizeVotesAndCallJudge(room.id, room.current_round);
     }
-  };
+    return () => clearTimeout(timer);
+  }, [room?.status, room?.id, room?.current_round, voteTimeRemaining, isHost, voteResults, finalizeVotesAndCallJudge]);
 
-  const callJudge = useCallback(async () => {
-    if (!room) return;
-    try {
-      await fetch('/api/judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room_id: room.id,
-          round: room.current_round,
-          vote_results: voteResults
-        })
-      });
-    } catch (e) {
-      console.error(e);
+  // Solo play: skip voting entirely
+  useEffect(() => {
+    if (room?.status === 'voting' && players.length <= 1 && isHost) {
+      finalizeVotesAndCallJudge(room.id, room.current_round);
     }
-  }, [room, voteResults]);
+  }, [room?.status, room?.id, room?.current_round, players.length, isHost, finalizeVotesAndCallJudge]);
 
   const handleStartGame = async (mode: RoundMode = 'classic') => {
     if (!room) return;
@@ -279,7 +346,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     if (room.current_round >= MAX_ROUNDS) {
       await supabase.from("rooms").update({ status: "finished" }).eq("id", room.id);
     } else {
-      // Vary the mode — sometimes random, sometimes the host's pick carries over
+      // Vary the mode
       const modes: RoundMode[] = ['classic', 'classic', 'speed', 'reverse', 'classic'];
       const nextMode = modes[Math.floor(Math.random() * modes.length)];
       const usedScenarios = room.used_scenarios || [];
@@ -309,42 +376,20 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       round: room.current_round,
       argument_text: text,
     });
-
-    // Check if everyone has submitted (host handles this logic)
-    if (isHost) {
-      const { data: subs } = await supabase
-        .from("submissions")
-        .select("id")
-        .eq("room_id", room.id)
-        .eq("round", room.current_round);
-
-      if (subs && subs.length >= players.length) {
-        // Everyone submitted! Move to voting
-        moveToVoting();
-      }
-    }
+    // Submission count checking is handled by realtime subscription
   };
 
   const handleVote = async (votedForPlayerId: string) => {
     if (!room || !player) return;
     setHasVoted(true);
-
     await supabase.from("votes").insert({
       room_id: room.id,
       voter_player_id: player.id,
       voted_for_player_id: votedForPlayerId,
       round: room.current_round,
     });
-    // Vote count checking is handled by the realtime subscription on vote inserts
+    // Vote count checking is handled by realtime subscription
   };
-
-  // If there's only 1 player (solo testing), skip voting
-  useEffect(() => {
-    if (room?.status === 'voting' && players.length <= 1 && isHost) {
-      // Skip voting for solo play
-      setTimeout(() => callJudge(), 1000);
-    }
-  }, [room?.status, players.length, isHost, callJudge]);
 
   if (!room) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-stone-900">
@@ -411,7 +456,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           onVote={handleVote}
           hasVoted={hasVoted}
           voteResults={voteResults}
-          winnerNickname={verdict?.verdict_json?.winner_nickname || ''}
+          voteTimeRemaining={voteTimeRemaining}
         />
       )}
 

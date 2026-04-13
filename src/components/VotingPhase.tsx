@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Player } from "@/lib/types";
-import { Vote, CheckCircle, Users } from "lucide-react";
+import { Vote, CheckCircle, Users, Clock } from "lucide-react";
 
 interface VotingPhaseProps {
   players: Player[];
@@ -12,7 +12,7 @@ interface VotingPhaseProps {
   onVote: (votedForPlayerId: string) => void;
   hasVoted: boolean;
   voteResults: { player_id: string; nickname: string; votes: number }[] | null;
-  winnerNickname: string;
+  voteTimeRemaining: number;
 }
 
 export default function VotingPhase({
@@ -22,22 +22,21 @@ export default function VotingPhase({
   onVote,
   hasVoted,
   voteResults,
-  winnerNickname,
+  voteTimeRemaining,
 }: VotingPhaseProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
 
   const handleVote = () => {
     if (!selectedId) return;
-    setConfirmed(true);
     onVote(selectedId);
   };
+
+  const isUrgent = voteTimeRemaining <= 5;
 
   // Show vote results
   if (voteResults) {
     const maxVotes = Math.max(...voteResults.map(v => v.votes), 1);
     const sortedResults = [...voteResults].sort((a, b) => b.votes - a.votes);
-    const crowdWinner = sortedResults[0];
 
     return (
       <motion.div
@@ -49,11 +48,6 @@ export default function VotingPhase({
           <h2 className="text-3xl md:text-4xl font-bold text-amber-50 uppercase tracking-widest mb-2">
             The People Have Spoken
           </h2>
-          <p className="text-stone-400 text-lg italic">
-            {crowdWinner.nickname === winnerNickname
-              ? "🔥 UNANIMOUS! The crowd agrees with the Judge!"
-              : `The crowd picked ${crowdWinner.nickname}, but the Judge had other ideas...`}
-          </p>
         </div>
 
         <div className="space-y-3">
@@ -100,14 +94,32 @@ export default function VotingPhase({
     );
   }
 
+  // Spectator view
+  if (!currentPlayer) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-4xl mx-auto text-center py-16 font-[Georgia,serif]"
+      >
+        <Users className="mx-auto text-stone-500 mb-4" size={48} />
+        <p className="text-2xl font-bold text-stone-400 uppercase tracking-widest">Spectating — Players are voting</p>
+        <div className={`inline-flex items-center gap-2 mt-6 text-2xl font-bold ${isUrgent ? 'text-red-400 animate-pulse' : 'text-stone-400'}`}>
+          <Clock size={24} /> {voteTimeRemaining}s
+        </div>
+      </motion.div>
+    );
+  }
+
   // Voting UI
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 150, damping: 15 }}
-      className="w-full max-w-4xl mx-auto space-y-8 font-[Georgia,serif]"
+      className="w-full max-w-4xl mx-auto space-y-6 font-[Georgia,serif]"
     >
+      {/* Header with countdown */}
       <div className="text-center">
         <motion.div
           initial={{ scale: 0 }}
@@ -119,6 +131,12 @@ export default function VotingPhase({
           <h2 className="text-3xl md:text-4xl font-bold text-stone-900 uppercase tracking-widest">
             Cast Your Vote
           </h2>
+          <div className={`flex items-center gap-1.5 ml-4 pl-4 border-l-2 border-stone-400 text-2xl font-bold ${
+            isUrgent ? 'text-red-700 animate-pulse' : 'text-stone-600'
+          }`}>
+            <Clock size={20} />
+            {voteTimeRemaining}s
+          </div>
         </motion.div>
         <p className="text-stone-300 text-lg italic mt-2">
           {hasVoted
@@ -131,16 +149,20 @@ export default function VotingPhase({
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-16 bg-amber-50/10 border border-stone-700 rounded-2xl"
+          className="text-center py-12 bg-amber-50/10 border border-stone-700 rounded-2xl"
         >
           <CheckCircle className="mx-auto text-green-400 mb-4" size={48} />
           <p className="text-2xl font-bold text-amber-50 uppercase tracking-widest">Vote Recorded!</p>
-          <p className="text-stone-400 mt-2 italic">Waiting for everyone else...</p>
+          <p className="text-stone-400 mt-2 italic">
+            {voteTimeRemaining > 0
+              ? `Moving on in ${voteTimeRemaining}s if others don't vote...`
+              : "Tallying votes..."}
+          </p>
         </motion.div>
       ) : (
         <div className="space-y-4">
           {submissions
-            .filter(s => s.player_id !== currentPlayer?.id) // Can't vote for yourself
+            .filter(s => s.player_id !== currentPlayer?.id)
             .map((sub, i) => (
               <motion.button
                 key={sub.player_id}
