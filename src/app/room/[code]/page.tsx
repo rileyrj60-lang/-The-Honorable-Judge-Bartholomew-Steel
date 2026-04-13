@@ -337,7 +337,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     const time = mode === 'speed' ? SPEED_ROUND_TIME : ROUND_TIME;
     setTimeRemaining(time);
 
-    await supabase
+    const { error } = await supabase
       .from("rooms")
       .update({
         status: "playing",
@@ -347,6 +347,19 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         used_scenarios: [...usedScenarios, scenario.text],
       })
       .eq("id", room.id);
+
+    // Fallback if new columns don't exist yet
+    if (error) {
+      console.warn("Start game with new columns failed, falling back:", error.message);
+      await supabase
+        .from("rooms")
+        .update({
+          status: "playing",
+          current_scenario: scenario.text,
+          current_round: 1,
+        })
+        .eq("id", room.id);
+    }
   };
 
   const handleNextRound = async () => {
@@ -354,7 +367,6 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
     if (room.current_round >= MAX_ROUNDS) {
       await supabase.from("rooms").update({ status: "finished" }).eq("id", room.id);
     } else {
-      // Vary the mode
       const modes: RoundMode[] = ['classic', 'classic', 'speed', 'reverse', 'classic'];
       const nextMode = modes[Math.floor(Math.random() * modes.length)];
       const usedScenarios = room.used_scenarios || [];
@@ -362,7 +374,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       const time = nextMode === 'speed' ? SPEED_ROUND_TIME : ROUND_TIME;
       setTimeRemaining(time);
 
-      await supabase
+      const { error } = await supabase
         .from("rooms")
         .update({
           status: "playing",
@@ -372,6 +384,18 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           used_scenarios: [...usedScenarios, scenario.text],
         })
         .eq("id", room.id);
+
+      if (error) {
+        console.warn("Next round with new columns failed, falling back:", error.message);
+        await supabase
+          .from("rooms")
+          .update({
+            status: "playing",
+            current_scenario: scenario.text,
+            current_round: room.current_round + 1,
+          })
+          .eq("id", room.id);
+      }
     }
   };
 

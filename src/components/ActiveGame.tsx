@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import type { Room, Player, RoundMode } from "@/lib/types";
 import { CATEGORY_INFO, DIFFICULTY_INFO, SCENARIOS, REVERSE_SCENARIOS } from "@/lib/scenarios";
@@ -22,12 +22,16 @@ interface ActiveGameProps {
 export default function ActiveGame({ room, player, hasSubmitted, onSubmitArgument, timeRemaining }: ActiveGameProps) {
   const [argument, setArgument] = useState("");
   const [showModeIntro, setShowModeIntro] = useState(true);
+  const argumentRef = useRef("");
 
   const mode = room.round_mode || 'classic';
   const modeInfo = ROUND_MODE_INFO[mode];
   const isSpeed = mode === 'speed';
   const isUrgent = timeRemaining <= 10;
   const isDanger = timeRemaining <= 5;
+
+  // Keep ref in sync with state
+  useEffect(() => { argumentRef.current = argument; }, [argument]);
 
   // Find scenario metadata for difficulty display
   const pool = mode === 'reverse' ? REVERSE_SCENARIOS : SCENARIOS;
@@ -45,9 +49,9 @@ export default function ActiveGame({ room, player, hasSubmitted, onSubmitArgumen
         "*sweats nervously*",
         "I was told there would be snacks, not questions.",
       ];
-      onSubmitArgument(argument || defaultMessages[Math.floor(Math.random() * defaultMessages.length)]);
+      onSubmitArgument(argumentRef.current || defaultMessages[Math.floor(Math.random() * defaultMessages.length)]);
     }
-  }, [timeRemaining, hasSubmitted, argument, onSubmitArgument]);
+  }, [timeRemaining, hasSubmitted, onSubmitArgument]);
 
   // Auto-hide mode intro after 2.5s
   useEffect(() => {
