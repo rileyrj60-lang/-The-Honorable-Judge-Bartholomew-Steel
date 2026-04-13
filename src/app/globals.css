@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+  :root {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Jackbox aesthetics */
+.jackbox-title {
+  @apply text-5xl md:text-7xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-600 drop-shadow-lg;
+}
+
+.jackbox-card {
+  @apply bg-slate-800/80 backdrop-blur-md rounded-2xl border-4 border-slate-700 shadow-2xl p-6 md:p-8;
+}
+
+.jackbox-input {
+  @apply w-full bg-slate-900 border-4 border-slate-600 rounded-xl p-4 text-xl md:text-2xl outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-400/20 transition-all font-bold text-white placeholder-slate-500;
+}
+
+.jackbox-button {
+  @apply w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-900 font-black uppercase tracking-widest text-xl rounded-xl py-4 px-8 hover:from-yellow-300 hover:to-orange-400 transform hover:-translate-y-1 active:translate-y-1 transition-all shadow-[0_8px_0_rgb(194,65,12)] hover:shadow-[0_4px_0_rgb(194,65,12)] active:shadow-none;
+}
