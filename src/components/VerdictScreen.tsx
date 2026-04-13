@@ -25,9 +25,9 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
       i++;
       if (i >= fullSpeech.length) {
         clearInterval(intervalId);
-        setTimeout(() => setSpeechFinished(true), 1000);
+        setTimeout(() => setSpeechFinished(true), 400);
       }
-    }, 30); // Typewriting speed
+    }, 10); // Typewriting speed
 
     return () => clearInterval(intervalId);
   }, [fullSpeech]);
@@ -37,7 +37,7 @@ export default function VerdictScreen({ verdict, isHost, onNextRound }: VerdictS
     if (speechFinished && currentRoastIndex < roasts.length) {
       const timer = setTimeout(() => {
         setCurrentRoastIndex(prev => prev + 1);
-      }, 3000); // Wait 3 seconds between each roast appearing
+      }, 1000); // Wait 1 second between each roast appearing
       return () => clearTimeout(timer);
     }
   }, [speechFinished, currentRoastIndex, roasts.length]);
