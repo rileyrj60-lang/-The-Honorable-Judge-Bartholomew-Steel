@@ -14,6 +14,11 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const handleCreateRoom = async () => {
+    if (!nickname) {
+      setError("Enter a nickname to host the game!");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     const code = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -21,7 +26,7 @@ export default function Home() {
     // Create the room
     const { data: room, error: roomError } = await supabase
       .from("rooms")
-      .insert({ code })
+      .insert({ code, host_id: nickname })
       .select()
       .single();
 
@@ -31,8 +36,18 @@ export default function Home() {
       return;
     }
 
-    // Set host_id to a random session id for now, but really anyone joining first feels like host in this demo
-    router.push(`/room/${code}?host=true`);
+    // Add host as player
+    const { error: playerError } = await supabase
+      .from("players")
+      .insert({ room_id: room.id, nickname });
+
+    if (playerError) {
+      setError("Failed to join as host.");
+      setIsLoading(false);
+      return;
+    }
+
+    router.push(`/room/${code}?host=true&nickname=${encodeURIComponent(nickname)}`);
   };
 
   const handleJoinRoom = async (e: React.FormEvent) => {
@@ -114,20 +129,30 @@ export default function Home() {
             <p className="text-slate-400 text-lg">Create a room and invite your friends</p>
           </div>
           
-          <button 
-            onClick={handleCreateRoom} 
-            disabled={isLoading}
-            className="jackbox-button"
-          >
-            {isLoading ? "Creating..." : "Create Room"}
-          </button>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="YOUR NICKNAME"
+              maxLength={15}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              className="jackbox-input text-center block w-full"
+            />
+            <button 
+              onClick={handleCreateRoom} 
+              disabled={isLoading}
+              className="jackbox-button w-full"
+            >
+              {isLoading ? "Creating..." : "Create Room"}
+            </button>
+          </div>
         </motion.div>
 
         <motion.div 
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="jackbox-card space-y-6"
+          className="jackbox-card space-y-6 flex flex-col"
         >
           <div className="space-y-2">
             <h2 className="text-3xl font-bold flex items-center gap-3">
@@ -136,7 +161,7 @@ export default function Home() {
             <p className="text-slate-400 text-lg">Enter the 4-letter code on the host screen</p>
           </div>
 
-          <form onSubmit={handleJoinRoom} className="space-y-4">
+          <form onSubmit={handleJoinRoom} className="space-y-4 flex-grow flex flex-col">
             <input
               type="text"
               placeholder="ROOM CODE"
